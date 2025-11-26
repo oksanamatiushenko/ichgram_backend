@@ -1,6 +1,7 @@
-const name = "user";
+import "dotenv/config"
 
-if(name === "user") {
+import connectDatabase from "./db/connectDatabase.js"
+import startServer from "./server.js"
 
-    console.log("Welcome to Backend")
-}
+await connectDatabase();
+startServer();
