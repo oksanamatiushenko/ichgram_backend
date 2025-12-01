@@ -4,7 +4,7 @@ import { registerUser } from "../services/auth.services.js";
 
 import validateBody from "../utils/validateBody.js";
 
-import { registerSchema } from "../schemas/auth.schemas.js";
+import { registerSchema, loginSchema } from "../schemas/auth.schemas.js";
 
 export const registerController = async (
   req: Request,
@@ -16,4 +16,14 @@ export const registerController = async (
   res.status(201).json({
     message: "User register successfully",
   });
+};
+
+export const loginController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  validateBody(loginSchema, req.body);
+  const result = await loginUser(req.body);
+
+  res.status(200).json(result);
 };

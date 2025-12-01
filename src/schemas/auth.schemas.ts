@@ -34,7 +34,7 @@ export const registerSchema = z.object({
         .string()
         .trim()
         .min(1, "Username is required")
-        .max(50, "Full name is too long"),
+        .max(50, "Username is too long"), // ← исправлено!
     password: z
         .string()
         .trim()

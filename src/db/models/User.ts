@@ -5,13 +5,15 @@ import { emailRegex } from "../../constants/auth.constants.js";
 import { handleSaveError, setUpdateSettings } from "../hooks.js";
 
 export interface UserDocument extends Document {
+
+  _id: string;
   email: string;
   fullName: string;
   username: string;
   password: string;
   verify: boolean;
-  accessToken: string;
-  refreshToken: string;
+  accessToken?: string;
+  refreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,7 +26,7 @@ const userSchema = new Schema(
       unique: true,
       required: true,
     },
-    fullName: {
+    fullname: {
       type: String,
       required: true,
       trim: true,

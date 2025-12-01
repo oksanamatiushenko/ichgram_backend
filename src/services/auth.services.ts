@@ -1,9 +1,27 @@
 import bcrypt from "bcrypt";
-import User from "../db/models/User.js";
+import jwt from "jsonwebtoken";
 
 import HttpError from "../utils/HttpError.js";
 
-import { RegisterPayload } from "../schemas/auth.schemas.js";
+import User, { UserDocument } from "../db/models/User.js";
+
+import { LoginPayload, RegisterPayload } from "../schemas/auth.schemas.js";
+
+const { JWT_SECRET } = process.env;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET not define in environment variables");
+}
+
+type UserFindResult = UserDocument | null;
+
+export interface LoginResult {
+  accessToken: string;
+  refreshToken: string;
+  user: {
+    email: string;
+  };
+}
 
 export const registerUser = async (payload: RegisterPayload) => {
   const user = await User.findOne({ email: payload.email });
@@ -13,84 +31,40 @@ export const registerUser = async (payload: RegisterPayload) => {
   return User.create({ ...payload, password: hashPassword });
 };
 
-// import bcrypt from "bcrypt";
-// import jwt from "jsonwebtoken"
+export const loginUser = async (
+  payload: LoginPayload,
+): Promise<LoginResult> => {
+  const user: UserFindResult = await User.findOne({
+    $or: [{ username: payload.username }, { email: payload.username }],
+  });
 
-// import User from "../db/models/User.js";
-// import HttpError from "../utils/HttpError.js";
+  if (!user) throw HttpError(401, "User not found");
 
-// import { UserDocument } from "../db/models/User.js";
-// import { LoginPayload } from "../schemas/auth.schemas.js";
+  const passwordCompare: boolean = await bcrypt.compare(
+    payload.password,
+    user.password,
+  );
+  if (!passwordCompare) throw HttpError(401, "Password invalid!");
+  const tokenPayload = {
+    id: user._id.toString(),
+  };
 
-// const { JWT_SECRET = "devsecret" } = process.env;
+  const accessToken: string = jwt.sign(tokenPayload, JWT_SECRET, {
+    expiresIn: "15m",
+  });
+  const refreshToken: string = jwt.sign(tokenPayload, JWT_SECRET, {
+    expiresIn: "7d",
+  });
 
-// export interface ILoginResponse {
-//   token: string;
-//   user: IUserDto;
-// }
+  await User.findByIdAndUpdate(user._id, { accessToken, refreshToken });
 
-// export interface IJWTTokenPayload {
-//   id: string;
-// }
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      email: user.email,
+    },
+  };
+};
 
-// const createToken = (user: UserDocument): string => {
-//   const payload: IJWTTokenPayload = {
-//     id: user.id.toString(),
-//   };
 
-//   const token = jwt.sign(payload, JWT_SECRET, {
-//     expiresIn: "24h",
-//   });
-
-//   return token;
-// };
-
-// export const login = async ({
-//   identifier,
-//   password,
-// }: LoginPayload): Promise<ILoginResponse> => {
-//   const user = (await User.findOne({
-//     $or: [{ email: identifier }, { username: identifier }],
-//   })) as UserDocument | null;
-
-//   if (!user) {
-//     throw HttpError(401, `User with identifier ${identifier} not exist`);
-//   }
-
-//   if (!user.verify) {
-//     throw HttpError(403, "Please verify your email before logging in");
-//   }
-
-//   const isPasswordValid = await bcrypt.compare(password, user.password);
-
-//   if (!isPasswordValid) {
-//     throw HttpError(401, "Password invalid");
-//   }
-
-//   const token = createToken(user);
-//   user.token = token;
-//   await user.save();
-
-//   return {
-//     token,
-//     user: toUserDto(user),
-//   };
-// };
-
-// export const getCurrent = async (user: UserDocument): Promise<ILoginResponse> => {
-//   return {
-//     token: user.token!,
-//     user: toUserDto(user),
-//   };
-// };
-
-// export const logout = async ({ _id }: UserDocument): Promise<void> => {
-//   const user = (await User.findById(_id)) as UserDocument | null;
-
-//   if (!user) {
-//     throw HttpError(401, `User not found`);
-//   }
-
-//   user.token = "";
-//   await user.save();
-// };
