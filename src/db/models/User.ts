@@ -4,11 +4,9 @@ import { emailRegex } from "../../constants/auth.constants.js";
 
 import { handleSaveError, setUpdateSettings } from "../hooks.js";
 
-export interface UserDocument extends Document {
-
-  _id: string;
+export interface IUserDocument extends Document {
   email: string;
-  fullName: string;
+  fullname: string;
   username: string;
   password: string;
   verify: boolean;
@@ -59,10 +57,9 @@ const userSchema = new Schema(
 
 userSchema.post("save", handleSaveError);
 
-userSchema.pre("findOneAndUpdate", setUpdateSettings);
+userSchema.pre(/findOneAndUpdate/, setUpdateSettings);
+userSchema.post(/findOneAndUpdate/, handleSaveError);
 
-userSchema.post("findOneAndUpdate", handleSaveError);
-
-const User = model<UserDocument>("user", userSchema);
+const User = model<IUserDocument>("user", userSchema);
 
 export default User;

@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import HttpError from "../utils/HttpError.js";
 
-import User, { UserDocument } from "../db/models/User.js";
+import User, { IUserDocument } from "../db/models/User.js";
 
 import { LoginPayload, RegisterPayload } from "../schemas/auth.schemas.js";
 
@@ -13,9 +13,9 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET not define in environment variables");
 }
 
-type UserFindResult = UserDocument | null;
+type UserFindResult = IUserDocument | null;
 
-export interface LoginResult {
+export interface ILoginResult {
   accessToken: string;
   refreshToken: string;
   user: {
@@ -33,7 +33,7 @@ export const registerUser = async (payload: RegisterPayload) => {
 
 export const loginUser = async (
   payload: LoginPayload,
-): Promise<LoginResult> => {
+): Promise<ILoginResult> => {
   const user: UserFindResult = await User.findOne({
     $or: [{ username: payload.username }, { email: payload.username }],
   });

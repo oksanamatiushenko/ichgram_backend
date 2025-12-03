@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { registerUser } from "../services/auth.services.js";
+import { registerUser, loginUser } from "../services/auth.services.js";
 
 import validateBody from "../utils/validateBody.js";
 
