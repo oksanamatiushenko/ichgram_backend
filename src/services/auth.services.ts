@@ -35,6 +35,7 @@ export const loginUser = async (
   payload: LoginPayload,
 ): Promise<ILoginResult> => {
   const user: UserFindResult = await User.findOne({
+    //@ts-expect-error
     $or: [{ username: payload.username }, { email: payload.username }],
   });
 
@@ -46,6 +47,7 @@ export const loginUser = async (
   );
   if (!passwordCompare) throw HttpError(401, "Password invalid!");
   const tokenPayload = {
+    //@ts-expect-error
     id: user._id.toString(),
   };
 
@@ -55,7 +57,7 @@ export const loginUser = async (
   const refreshToken: string = jwt.sign(tokenPayload, JWT_SECRET, {
     expiresIn: "7d",
   });
-
+//@ts-expect-error
   await User.findByIdAndUpdate(user._id, { accessToken, refreshToken });
 
   return {
