@@ -1,30 +1,43 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-
+import { Types } from "mongoose";
 import HttpError from "../utils/HttpError.js";
-
 import User, { IUserDocument } from "../db/models/User.js";
-
 import { LoginPayload, RegisterPayload } from "../schemas/auth.schemas.js";
+import { generateToken } from "../utils/jwt.js";
 
-const { JWT_SECRET } = process.env;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET not define in environment variables");
-}
-
-type UserFindResult = IUserDocument | null;
-
+export type UserFindResult = IUserDocument | null;
 export interface ILoginResult {
   accessToken: string;
   refreshToken: string;
   user: {
     email: string;
+    username: string;
   };
 }
 
-export const registerUser = async (payload: RegisterPayload) => {
-  const user = await User.findOne({ email: payload.email });
+export const createTokens = (id: Types.ObjectId) => {
+  const accessToken: string = generateToken({ id }, { expiresIn: "15m" });
+  const refreshToken: string = generateToken(
+    { id },
+    {
+      expiresIn: "7d",
+    },
+  );
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
+
+type UserQuery = Parameters<(typeof User)["findOne"]>[0];
+
+export const findUser = (query: UserQuery): Promise<UserFindResult> =>
+  User.findOne(query);
+
+export const registerUser = async (
+  payload: RegisterPayload,
+): Promise<IUserDocument> => {
+  const user: UserFindResult = await User.findOne({ email: payload.email });
   if (user) throw HttpError(409, "Email already exist");
 
   const hashPassword = await bcrypt.hash(payload.password, 10);
@@ -35,8 +48,7 @@ export const loginUser = async (
   payload: LoginPayload,
 ): Promise<ILoginResult> => {
   const user: UserFindResult = await User.findOne({
-    //@ts-expect-error
-    $or: [{ username: payload.username }, { email: payload.username }],
+    $or: [{ username: payload.email }, { email: payload.email }],
   });
 
   if (!user) throw HttpError(401, "User not found");
@@ -46,18 +58,9 @@ export const loginUser = async (
     user.password,
   );
   if (!passwordCompare) throw HttpError(401, "Password invalid!");
-  const tokenPayload = {
-    //@ts-expect-error
-    id: user._id.toString(),
-  };
 
-  const accessToken: string = jwt.sign(tokenPayload, JWT_SECRET, {
-    expiresIn: "15m",
-  });
-  const refreshToken: string = jwt.sign(tokenPayload, JWT_SECRET, {
-    expiresIn: "7d",
-  });
-//@ts-expect-error
+  const { accessToken, refreshToken } = createTokens(user._id);
+
   await User.findByIdAndUpdate(user._id, { accessToken, refreshToken });
 
   return {
@@ -65,8 +68,7 @@ export const loginUser = async (
     refreshToken,
     user: {
       email: user.email,
+      username: user.username,
     },
   };
 };
-
-

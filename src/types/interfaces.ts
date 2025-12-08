@@ -6,6 +6,6 @@ export interface ResponseError extends Error {
   status: number;
 }
 
-export interface AuthenticatedRequest extends Request {
-  user: IUserDocument;
+export interface AuthRequest extends Request {
+  user?: IUserDocument;
 }

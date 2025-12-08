@@ -1,10 +1,11 @@
-import { Schema, model } from "mongoose";
+import { Types, Schema, model } from "mongoose";
 
 import { emailRegex } from "../../constants/auth.constants.js";
 
 import { handleSaveError, setUpdateSettings } from "../hooks.js";
 
 export interface IUserDocument extends Document {
+  _id: Types.ObjectId;
   email: string;
   fullname: string;
   username: string;
