@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import HttpError from "../utils/HttpError.js";
-import { findUser, UserFindResult } from "../services/auth.services.js"
+import { findUser, UserFindResult } from "../services/auth.services.js";
 import { verifyToken } from "../utils/jwt.js";
 
 const authenticate: RequestHandler = async (req, res, next) => {
@@ -9,18 +9,25 @@ const authenticate: RequestHandler = async (req, res, next) => {
 
   const [bearer, token] = authorization.split(" ");
   if (bearer !== "Bearer")
-    throw HttpError(401, "authorization header must have type Bearer");
-  if (!token) throw HttpError(401, "authorization header must have token");
+    throw HttpError(401, "Authorization header must have type Bearer");
+  if (!token) throw HttpError(401, "Authorization header must have token");
 
-  const {data: payload, error} = verifyToken(token);
-  if(error && error.message === "jwt expired") throw HttpError(401, "accessToken expired")
-  if(error) throw HttpError(401, error.message);
-  if(!payload) throw HttpError(401, "JWT payload not found")
+  const { data: payload, error } = verifyToken(token);
 
-    const user: UserFindResult = await findUser({_id: payload.id})
-    if(!user) throw HttpError(401, "User not found")
+  if (error && error.message === "jwt expired")
+    throw HttpError(401, "accessToken expired");
+  if (error) throw HttpError(401, error.message);
+  if (!payload) throw HttpError(401, "JWT payload not found");
 
-        req.user = user;
-        next();
+  const user: UserFindResult = await findUser({
+    _id: payload.id,
+    accessToken: token, // <- проверка валидности токена
+  });
+
+  if (!user) throw HttpError(401, "User not found or token invalid");
+
+  req.user = user;
+  next();
 };
+
 export default authenticate;

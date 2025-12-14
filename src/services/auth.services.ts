@@ -3,7 +3,8 @@ import { Types } from "mongoose";
 import HttpError from "../utils/HttpError.js";
 import User, { IUserDocument } from "../db/models/User.js";
 import { LoginPayload, RegisterPayload } from "../schemas/auth.schemas.js";
-import { generateToken } from "../utils/jwt.js";
+import { verifyToken } from "../utils/jwt.js";
+import createTokens from "../utils/createTokens.js";
 
 export type UserFindResult = IUserDocument | null;
 export interface ILoginResult {
@@ -14,20 +15,6 @@ export interface ILoginResult {
     username: string;
   };
 }
-
-export const createTokens = (id: Types.ObjectId) => {
-  const accessToken: string = generateToken({ id }, { expiresIn: "15m" });
-  const refreshToken: string = generateToken(
-    { id },
-    {
-      expiresIn: "7d",
-    },
-  );
-  return {
-    accessToken,
-    refreshToken,
-  };
-};
 
 type UserQuery = Parameters<(typeof User)["findOne"]>[0];
 
@@ -62,6 +49,48 @@ export const loginUser = async (
   const { accessToken, refreshToken } = createTokens(user._id);
 
   await User.findByIdAndUpdate(user._id, { accessToken, refreshToken });
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      email: user.email,
+      username: user.username,
+    },
+  };
+};
+
+export const logoutUser = async (_id: Types.ObjectId) => {
+  await User.findByIdAndUpdate(_id, {
+    accessToken: null,
+    refreshToken: null,
+  });
+};
+
+export const refreshUser = async (
+  refreshTokenOld: string,
+): Promise<ILoginResult> => {
+  // Проверяем, что токен передан
+  if (!refreshTokenOld) {
+    throw HttpError(401, "Refresh token missing");
+  }
+
+  // Проверяем JWT
+  const { error, data } = verifyToken(refreshTokenOld);
+  if (error) throw HttpError(401, error.message);
+  if (!data) throw HttpError(401, "Invalid refresh token");
+
+  // Ищем пользователя с этим refreshToken в базе
+  const user: UserFindResult = await findUser({
+    refreshToken: refreshTokenOld,
+  });
+  if (!user) throw HttpError(401, "User not found");
+
+  // Генерируем новые токены
+  const { accessToken, refreshToken } = createTokens(user._id);
+  await User.findByIdAndUpdate(user._id, { accessToken, refreshToken });
+
+  console.log("New refresh token:", refreshToken);
 
   return {
     accessToken,

@@ -5,7 +5,7 @@ export const loginSchema = z.object({
     email: z
         .string()
         .trim()
-        .min(1, "Email is required")
+        .min(1, "Email or username is required")
         .max(254, "Email is too long")
         .regex(emailRegex, "Please enter a valid email"),
     password: z
@@ -22,7 +22,7 @@ export const registerSchema = z.object({
     email: z
         .string()
         .trim()
-        .min(1, "Email is required")
+        .min(1, "Email or username is required")
         .max(254, "Email is too long")
         .regex(emailRegex, "Please enter a valid email"),
     fullname: z
@@ -34,7 +34,7 @@ export const registerSchema = z.object({
         .string()
         .trim()
         .min(1, "Username is required")
-        .max(50, "Username is too long"), // ← исправлено!
+        .max(50, "Username is too long"),
     password: z
         .string()
         .trim()

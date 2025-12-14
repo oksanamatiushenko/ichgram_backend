@@ -5,6 +5,7 @@ import {
   loginController,
   getCurrentController,
   logoutController,
+  refreshController
 } from "../controllers/auth.controller.js";
 
 import authenticate from "../middlewares/authenticate.js";
@@ -17,6 +18,8 @@ authRouter.post("/login", loginController);
 
 authRouter.get("/current", authenticate, getCurrentController);
 
-authRouter.post("/logout", logoutController);
+authRouter.post("/logout", authenticate, logoutController);
+
+authRouter.post("/refresh", refreshController);
 
 export default authRouter;

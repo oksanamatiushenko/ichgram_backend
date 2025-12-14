@@ -1,6 +1,6 @@
 import { Types, Schema, model } from "mongoose";
 
-import { emailRegex } from "../../constants/auth.constants.js";
+import { emailRegex, fullnameRegex, usernameRegex } from "../../constants/auth.constants.js";
 
 import { handleSaveError, setUpdateSettings } from "../hooks.js";
 
@@ -27,11 +27,13 @@ const userSchema = new Schema(
     },
     fullname: {
       type: String,
+      match: fullnameRegex,
       required: true,
       trim: true,
     },
     username: {
       type: String,
+      match: usernameRegex,
       unique: true,
       required: true,
       trim: true,

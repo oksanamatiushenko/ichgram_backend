@@ -1,11 +1,11 @@
 import { Request, Response, RequestHandler } from "express";
 
-import { registerUser, loginUser } from "../services/auth.services.js";
+import { registerUser, loginUser, logoutUser, refreshUser } from "../services/auth.services.js";
 
 import validateBody from "../utils/validateBody.js";
 
 import { registerSchema, loginSchema } from "../schemas/auth.schemas.js";
-import { createTokens } from "./../services/auth.services.js";
+// import createTokens  from "./../utils/createTokens.js";
 import { AuthRequest } from "../types/interfaces.js";
 import HttpError from "../utils/HttpError.js";
 
@@ -28,13 +28,13 @@ export const loginController: RequestHandler = async (req, res) => {
   res.status(200).json(result);
 };
 
+
 export const getCurrentController = async (req: AuthRequest, res: Response) => {
-  if (!req.user) throw HttpError(401, "User not authenticated");
-  const { accessToken, refreshToken } = createTokens(req.user._id);
+  if (!req.user) {
+    throw HttpError(401, "User not authenticated");
+  }
 
   res.json({
-    accessToken,
-    refreshToken,
     user: {
       email: req.user.email,
       username: req.user.username,
@@ -42,14 +42,32 @@ export const getCurrentController = async (req: AuthRequest, res: Response) => {
   });
 };
 
-export const logoutController = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  res.clearCookie("token");
-  res.clearCookie("refreshToken");
+// export const getCurrentController = async (req: AuthRequest, res: Response) => {
+//   if (!req.user) throw HttpError(401, "User not authenticated");
+//   const { accessToken, refreshToken } = createTokens(req.user._id);
 
-  res.status(200).json({
-    message: "User logged out successfully",
-  });
+//   res.json({
+//     accessToken,
+//     refreshToken,
+//     user: {
+//       email: req.user.email,
+//       username: req.user.username,
+//     },
+//   });
+// };
+
+
+export const logoutController = async (req: AuthRequest, res: Response) => {
+  if (!req.user) throw HttpError(401, "User not authenticated");
+
+  await logoutUser(req.user._id);
+
+  res.json({ message: "Logout successfully" });
+  
+};
+
+export const refreshController: RequestHandler = async (req, res) => {
+  const result = await refreshUser(req.body.refreshToken);
+
+  res.json(result);
 };
