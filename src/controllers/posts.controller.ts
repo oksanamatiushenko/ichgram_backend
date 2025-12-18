@@ -12,7 +12,6 @@ export const createPostController = async (req: AuthRequest, res: Response) => {
     throw HttpError(400, "Image is required");
   }
 // console.log(req.file);
-// console.log(req.body);
 // console.log(req.user);
 
   const post = await createPostService({
@@ -22,6 +21,7 @@ export const createPostController = async (req: AuthRequest, res: Response) => {
   });
 console.log("POST CREATED:", post._id);
   res.status(201).json(post);
+  // console.log(req.body);
 };
 
 export const getUserPostsController = async (req, res) => {
@@ -63,7 +63,7 @@ export const getExplorePosts = async (req: Request, res: Response) => {
 
 export const likePostController = async (req: Request, res: Response) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params;
     const userId = req.user._id;
     const likesCount = await postsService.likePost(postId, userId);
     res.json({ likesCount });

@@ -33,6 +33,7 @@ export const getCurrentController = async (req: AuthRequest, res: Response) => {
     user: {
       email: req.user.email,
       username: req.user.username,
+      avatarUrl: req.user.avatarUrl || null,
     },
   });
 };
