@@ -21,7 +21,7 @@ const authenticate: RequestHandler = async (req, res, next) => {
 
   const user: UserFindResult = await findUser({
     _id: payload.id,
-    accessToken: token, // <- проверка валидности токена
+    accessToken: token, 
   });
 
   if (!user) throw HttpError(401, "User not found or token invalid");

@@ -1,11 +1,10 @@
-import { Document, CallbackError } from "mongoose";
+import { Document, CallbackError, Query } from "mongoose";
 
-type MongooserErrorWithStatus = CallbackError & { status?: number };
-
+type MongooseErrorWithStatus = CallbackError & { status?: number };
 type MongooseNext = (err?: CallbackError) => void;
 
 export const handleSaveError = (
-  error: MongooserErrorWithStatus,
+  error: MongooseErrorWithStatus,
   doc: Document,
   next: MongooseNext,
 ) => {
@@ -15,14 +14,12 @@ export const handleSaveError = (
   if (error?.name === "MongoServerError") {
     error.status = 409;
   }
-
-  next();
+  next(error);
 };
 
-export const setUpdateSettings = function (this: any, next?: MongooseNext) {
-  this.options.new = true;
-  this.options.runValidators = true;
-  if (next && typeof next === "function") {
-    next();
-  }
+export const setUpdateSettings = function (this: Query<unknown, Document>) {
+  this.setOptions({
+    new: true,
+    runValidators: true,
+  });
 };

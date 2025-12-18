@@ -1,7 +1,5 @@
 import { Types, Schema, model } from "mongoose";
-
 import { emailRegex, fullnameRegex, usernameRegex } from "../../constants/auth.constants.js";
-
 import { handleSaveError, setUpdateSettings } from "../hooks.js";
 
 export interface IUserDocument extends Document {
@@ -13,11 +11,16 @@ export interface IUserDocument extends Document {
   verify: boolean;
   accessToken?: string;
   refreshToken?: string;
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
+  bio?: string;
+  link?: string;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const userSchema = new Schema(
+const userSchema = new Schema<IUserDocument>(
   {
     email: {
       type: String,
@@ -54,14 +57,33 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    followers: {
+      type: [{ type: Schema.Types.ObjectId, ref: "user" }],
+      default: [],
+    },
+    following: {
+      type: [{ type: Schema.Types.ObjectId, ref: "user" }],
+      default: [],
+    },
+    bio: {
+      type: String,
+      default: "",
+    },
+    link: {
+      type: String,
+      default: "",
+    },
+    avatarUrl: {
+      type: String,
+      default: "",
+    },
   },
-  { versionKey: false, timestamps: true },
+  { versionKey: false, timestamps: true }
 );
 
 userSchema.post("save", handleSaveError);
-
 userSchema.pre(/findOneAndUpdate/, setUpdateSettings);
-userSchema.post(/findOneAndUpdate/, handleSaveError);
+userSchema.post("findOneAndUpdate", handleSaveError);
 
 const User = model<IUserDocument>("user", userSchema);
 
