@@ -63,7 +63,7 @@ export const updateUserProfileController = async (
       followers: user.followers || [],
       following: user.following || [],
     },
-  });
+  }); 
 };
 
 export const searchUsersController = async (req: Request, res: Response) => {

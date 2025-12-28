@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Types } from "mongoose";
 import { AuthRequest } from "../types/interfaces.js";
 import * as postsService from "../services/posts.services.js";
 import { IUserDocument } from "../db/models/User.js";
@@ -34,12 +33,7 @@ export const getUserPostsController = async (req, res) => {
 
 export const getPostByIdController = async (req: Request, res: Response) => {
   try {
-    const { postId } = req.params;
-
-    if (!Types.ObjectId.isValid(postId)) {
-      return res.status(400).json({ message: "Неверный ID поста" });
-    }
-
+    const postId = req.params.postId;
     const post = await postsService.getPostByIdService(postId);
 
     if (!post) return res.status(404).json({ message: "Пост не найден" });
@@ -50,6 +44,7 @@ export const getPostByIdController = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Ошибка сервера" });
   }
 };
+
 
 export const getExplorePosts = async (req: Request, res: Response) => {
   try {

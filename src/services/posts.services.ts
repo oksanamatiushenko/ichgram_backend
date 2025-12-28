@@ -35,25 +35,26 @@ export const getUserPostsService = async (username: string) => {
 
 export const getPostByIdService = async (postId: string) => {
   const post = await Post.findById(postId)
-    .populate("author", "username avatarUrl")
+    .populate("author", "_id username avatarUrl")
     .populate({
       path: "comments",
       populate: [
-        { path: "author", select: "username avatarUrl" },
-        { path: "likes", select: "username avatarUrl" },
+        { path: "author", select: "_id username avatarUrl" },
+        { path: "likes", select: "_id username avatarUrl" },
       ],
       options: { sort: { createdAt: 1 } },
     })
-    .populate("likes", "username avatarUrl")
+    .populate("likes", "_id username avatarUrl")
     .lean();
 
   if (!post) return null;
 
   return {
     ...post,
-    author: post.author || { username: "", avatarUrl: "" },
+    author: post.author || { _id: null, username: "", avatarUrl: "" },
   };
 };
+
 
 export const getExplorePostsService = async () => {
   return await Post.aggregate([{ $sample: { size: 100 } }]);

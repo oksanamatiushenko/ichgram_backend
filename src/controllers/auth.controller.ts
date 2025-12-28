@@ -31,6 +31,7 @@ export const getCurrentController = async (req: AuthRequest, res: Response) => {
 
   res.json({
     user: {
+      _id: req.user._id,
       email: req.user.email,
       username: req.user.username,
       avatarUrl: req.user.avatarUrl || null,

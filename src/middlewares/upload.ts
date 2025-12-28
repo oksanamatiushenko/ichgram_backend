@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 import { Request } from "express";
 
-const rootUploadDir = path.join(process.cwd(), "uploads");
+const rootUploadDir = path.join(process.cwd(), "public/uploads");
 
 const getDestination = (req: Request, file: Express.Multer.File) => {
   if (file.fieldname === "avatar") {
