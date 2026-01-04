@@ -63,7 +63,7 @@ export const likePostController = async (req: Request, res: Response) => {
     const likesCount = await postsService.likePost(postId, userId);
     res.json({ likesCount });
   } catch (err) {
-    console.error("LIKE controller error:", err);
+    console.error("LIKE controller error:", err);  
 
     if (err instanceof Error) {
       res
@@ -161,7 +161,6 @@ export async function getFeedPostsController(req: Request, res: Response) {
     }
   }
 }
-
 
 export const createCommentController = async (req: Request, res: Response) => {
   try {

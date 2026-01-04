@@ -6,7 +6,7 @@ interface CreateNotificationParams {
   recipient: Types.ObjectId;
   sender: Types.ObjectId;
   type: "like" | "comment" | "follow" | "likeOnComment";
-  post?: Types.ObjectId; 
+  post?: Types.ObjectId;
 }
 
 export const createNotification = async ({
@@ -15,20 +15,21 @@ export const createNotification = async ({
   type,
   post,
 }: CreateNotificationParams): Promise<INotification> => {
-  const notificationData: any = {
+  // Формируем объект уведомления
+  const notificationData: Partial<INotification> = {
     recipient,
     sender,
     type,
     isRead: false,
-    post: post || undefined,
+    ...(post ? { post } : {}), // добавляем post только если он есть
   };
 
+  // Создаём и сохраняем уведомление
   const notification = new Notification(notificationData);
   const savedNotification = await notification.save();
 
-  const populatedNotification = await Notification.findById(
-    savedNotification._id
-  )
+  // Наполняем данные для отправки через WebSocket
+  const populatedNotification = await Notification.findById(savedNotification._id)
     .populate("sender", "username avatarUrl")
     .populate({
       path: "post",
@@ -36,6 +37,7 @@ export const createNotification = async ({
     })
     .lean();
 
+  // Отправляем уведомление получателю
   io.to(recipient.toString()).emit("newNotification", populatedNotification);
 
   return savedNotification;
